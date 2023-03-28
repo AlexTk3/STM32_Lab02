@@ -43,8 +43,8 @@
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-uint8_t rx[1] = {"\0"};
-uint8_t tx[1] = {"\0"};
+uint8_t rx[1] = {'\0'};
+uint8_t tx[1] = {'\0'};
 RingBuffer rinBuf;
 /* USER CODE END PV */
 
@@ -216,15 +216,15 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if(huart == &huart1) {
-		if(rx[0] == '\n') {
+		if(rx[0] == '\r') {
 			uint16_t len = RingBuffer_GetDataLength(&rinBuf);
 			uint8_t Buffer[len];
-			RingBuffer_Read(&rinBuf, Buffer, len);
-			HAL_UART_Transmit_IT(&huart1, Buffer, sizeof(Buffer));
+			RingBuffer_Read(&rinBuf, Buffer, sizeof(Buffer));
+			HAL_UART_Transmit_IT(&huart1, Buffer, len);
 		} else {
 			RingBuffer_Write(&rinBuf, rx, sizeof(rx));
+			HAL_UART_Receive_IT(&huart1, rx, sizeof(rx));
 		}
-		return;
 	}
 }
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
