@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ringbuffer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,7 +43,9 @@
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
+uint8_t rx[1] = {"\0"};
+uint8_t tx[1] = {"\0"};
+RingBuffer rinBuf;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,6 +100,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_UART_Receive_IT(&huart1, rx, sizeof(rx));
   while (1)
   {
     /* USER CODE END WHILE */
@@ -212,10 +215,20 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-
+	if(huart == &huart1) {
+		if(rx[0] == '\n') {
+			uint16_t len = RingBuffer_GetDataLength(&rinBuf);
+			uint8_t Buffer[len];
+			RingBuffer_Read(&rinBuf, Buffer, len);
+			HAL_UART_Transmit_IT(&huart1, Buffer, sizeof(Buffer));
+		} else {
+			RingBuffer_Write(&rinBuf, rx, sizeof(rx));
+		}
+		return;
+	}
 }
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-
+	HAL_UART_Receive_IT(&huart1, rx, sizeof(rx));
 }
 /* USER CODE END 4 */
 
